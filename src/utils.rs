@@ -187,6 +187,33 @@ pub fn extract_generic_name(type_name: &str) -> Option<String> {
         .map(|captures| String::from(&captures[1]))
 }
 
+/// Attempts to extract a generic identifier from plain type names (i.e. `T`, `MyGeneric`).
+pub fn extract_plain_generic_name(type_name: &str) -> Option<String> {
+    let name = type_name.trim();
+    if name.is_empty() {
+        return None;
+    }
+
+    let mut chars = name.chars();
+    let first = chars.next()?;
+    if !first.is_ascii_uppercase() {
+        return None;
+    }
+
+    if name
+        .chars()
+        .any(|c| matches!(c, ':' | ' ' | '[' | ']' | '(' | ')'))
+    {
+        return None;
+    }
+
+    if !chars.all(|c| c.is_ascii_alphanumeric() || c == '_') {
+        return None;
+    }
+
+    Some(name.to_owned())
+}
+
 /// If `type_name` represents an Array, its size will be returned;
 ///
 /// # Arguments

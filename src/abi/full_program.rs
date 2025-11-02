@@ -1,7 +1,10 @@
 use std::collections::{BTreeMap, HashMap};
 
 use crate::abi::program::PanickingCall;
-use crate::{abi::program::Attribute, utils::extract_custom_type_name};
+use crate::{
+    abi::program::Attribute,
+    utils::{extract_custom_type_name, extract_generic_name, extract_plain_generic_name},
+};
 
 use crate::{
     error::{error, Error, Result},
@@ -266,6 +269,15 @@ impl FullTypeApplication {
             error_message: type_application.error_message.clone(),
         }
     }
+
+    pub fn from_declaration(type_decl: FullTypeDeclaration) -> FullTypeApplication {
+        FullTypeApplication {
+            name: type_decl.type_field.clone(),
+            type_decl,
+            type_arguments: Vec::new(),
+            error_message: None,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -341,6 +353,16 @@ impl FullTypeDeclaration {
 
     pub fn is_struct_type(&self) -> bool {
         self.type_field.starts_with("struct ")
+    }
+
+    pub fn generic_name(&self) -> Option<String> {
+        extract_generic_name(&self.type_field).or_else(|| {
+            if self.is_alias_type() || self.is_custom_type() {
+                return None;
+            }
+
+            extract_plain_generic_name(&self.type_field)
+        })
     }
 }
 
